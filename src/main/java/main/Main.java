@@ -219,6 +219,7 @@ public class Main {
             for (int i=0;i<secondAirport.getFlights().size();i++){
                 jdbc.addFlight(secondAirport.getFlights().get(i),secondAirport.getId());
             }
+            System.out.println(jdbc.getAirportByFlight(2));
 //            jdbc.deleteAirport(4);
 //            for(Flight fl : jdbc.getAllFlightsFrom(airport.getId())){
 //                System.out.println(fl);

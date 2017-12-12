@@ -24,6 +24,29 @@ public class JDBC {
         con = DriverManager.getConnection(URL, username, password);
     }
 
+    public void softDelete(int idAirport) throws SQLException {
+        PreparedStatement flightStmt = null;
+        PreparedStatement airportStmt = null;
+        if(getCountOfFlightsInAirport(idAirport) ==0) {
+            try {
+                flightStmt = con.prepareStatement("DELETE FROM flight WHERE fk_aId = ?");
+                flightStmt.setInt(1, idAirport);
+                flightStmt.execute();
+
+                airportStmt = con.prepareStatement("DELETE FROM airport WHERE aId = ?");
+                airportStmt.setInt(1, idAirport);
+                airportStmt.execute();
+            } finally {
+                if (flightStmt != null) {
+                    flightStmt.close();
+                    airportStmt.close();
+                }
+            }
+        }
+        else{
+            throw new RuntimeException("First of all,you have to delete flights from airport");
+        }
+    }
     public static Connection getCon() {
         return con;
     }
@@ -35,16 +58,17 @@ public class JDBC {
     public void addFlight(Flight fl, int airportId) throws SQLException {
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("INSERT INTO flight (fCompanyName,fDateOfFlight,fTimeInFlight,fTimeTakeOff,fPrice,fFrom,fTo,fk_aId) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            stmt.setString(1, fl.getCompanyName());
-            stmt.setDate(2, Date.valueOf(LocalDate.of(fl.getDateOfFlight().getYear(), fl.getDateOfFlight().getMonth(), fl.getDateOfFlight().getDayOfMonth())));
-            stmt.setInt(3, fl.getTimeInFlight());
-            stmt.setTime(4, Time.valueOf(LocalTime.of(fl.getTimeTakeOff().getHour(), fl.getTimeTakeOff().getMinute())));
-            stmt.setDouble(5, fl.getPrice());
-            stmt.setString(6, String.valueOf(fl.getFrom()));
-            stmt.setString(7, String.valueOf(fl.getTo()));
-            stmt.setInt(8, airportId);
+            stmt = con.prepareStatement("INSERT INTO flight (fId,fCompanyName,fDateOfFlight,fTimeInFlight,fTimeTakeOff,fPrice,fFrom,fTo,fk_aId) "
+                    + "VALUES (?,?, ?, ?, ?, ?, ?, ?, ?)");
+            stmt.setInt(1, getCountOfFlights()+1);
+            stmt.setString(2, fl.getCompanyName());
+            stmt.setDate(3, Date.valueOf(LocalDate.of(fl.getDateOfFlight().getYear(), fl.getDateOfFlight().getMonth(), fl.getDateOfFlight().getDayOfMonth())));
+            stmt.setInt(4, fl.getTimeInFlight());
+            stmt.setTime(5, Time.valueOf(LocalTime.of(fl.getTimeTakeOff().getHour(), fl.getTimeTakeOff().getMinute())));
+            stmt.setDouble(6, fl.getPrice());
+            stmt.setString(7, String.valueOf(fl.getFrom()));
+            stmt.setString(8, String.valueOf(fl.getTo()));
+            stmt.setInt(9, airportId);
             stmt.execute();
         } finally {
             if (stmt != null) {
@@ -59,7 +83,7 @@ public class JDBC {
             stmt = con.prepareStatement("INSERT INTO airport (aId,aName)"
                     + "VALUES (?,?)");
 
-            stmt.setInt(1, airport.getId());
+            stmt.setInt(1, getCountOfAirports()+1);
             stmt.setString(2, airport.getName());
             stmt.execute();
         } finally {
@@ -149,6 +173,28 @@ public class JDBC {
                     setFrom(Flight.City.valueOf(rs.getString("fFrom"))).
                     build();
         } finally {
+            if (rs != null) {
+                rs.close();
+            }
+            if (stmt != null) {
+                stmt.close();
+            }
+        }
+    }
+
+    public int getAirportByFlight(int flightId) throws SQLException {
+        Flight flight = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            stmt = con.prepareStatement("SELECT fk_aId AS airportId FROM flight WHERE fId =?");
+            stmt.setInt(1, flightId);
+            rs = stmt.executeQuery();
+            rs.next();
+            return rs.getInt("airportId");
+        }
+        finally {
             if (rs != null) {
                 rs.close();
             }
@@ -333,6 +379,25 @@ public class JDBC {
         try {
             stmt = con.createStatement();
             rs = stmt.executeQuery("SELECT COUNT(*) AS rowcount FROM flight");
+            rs.next();
+            return rs.getInt("rowcount");
+        }
+        finally {
+            if (rs != null) {
+                rs.close();
+            }
+            if (stmt != null) {
+                stmt.close();
+            }
+        }
+    }
+    public int getCountOfFlightsInAirport(int idAirport) throws SQLException {
+        ResultSet rs = null;
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("SELECT COUNT(*) AS rowcount FROM flight WHERE fk_aId=?");
+            stmt.setInt(1,idAirport);
+            rs = stmt.executeQuery();
             rs.next();
             return rs.getInt("rowcount");
         }
