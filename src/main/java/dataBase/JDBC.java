@@ -17,11 +17,18 @@ public class JDBC {
     private static Connection con = null;
     private static String username = "root";
     private static String password = "12345";
-    private static String URL = "jdbc:mysql://localhost:3306/airports";
+//    private static String URL = "jdbc:mysql://localhost:3306/airports";
+    private static String URL = "jdbc:mysql://localhost:3306/airports?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
 
     public JDBC() throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         con = DriverManager.getConnection(URL, username, password);
+    }
+    public static Connection getCon() {
+        return con;
+    }
+    public static void setCon(Connection con) {
+        JDBC.con = con;
     }
 
     public void softDelete(int idAirport) throws SQLException {
@@ -47,20 +54,12 @@ public class JDBC {
             throw new RuntimeException("First of all,you have to delete flights from airport");
         }
     }
-    public static Connection getCon() {
-        return con;
-    }
-
-    public static void setCon(Connection con) {
-        JDBC.con = con;
-    }
-
     public void addFlight(Flight fl, int airportId) throws SQLException {
         PreparedStatement stmt = null;
         try {
             stmt = con.prepareStatement("INSERT INTO flight (fId,fCompanyName,fDateOfFlight,fTimeInFlight,fTimeTakeOff,fPrice,fFrom,fTo,fk_aId) "
-                    + "VALUES (?,?, ?, ?, ?, ?, ?, ?, ?)");
-            stmt.setInt(1, getCountOfFlights()+1);
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            stmt.setInt(1, getMaxIdInFlights()+1);
             stmt.setString(2, fl.getCompanyName());
             stmt.setDate(3, Date.valueOf(LocalDate.of(fl.getDateOfFlight().getYear(), fl.getDateOfFlight().getMonth(), fl.getDateOfFlight().getDayOfMonth())));
             stmt.setInt(4, fl.getTimeInFlight());
@@ -76,14 +75,13 @@ public class JDBC {
             }
         }
     }
-
     public void addAirport(Airport airport) throws SQLException {
         PreparedStatement stmt = null;
         try {
             stmt = con.prepareStatement("INSERT INTO airport (aId,aName)"
                     + "VALUES (?,?)");
 
-            stmt.setInt(1, getCountOfAirports()+1);
+            stmt.setInt(1, getMaxIdInAirports() + 1);
             stmt.setString(2, airport.getName());
             stmt.execute();
         } finally {
@@ -92,7 +90,6 @@ public class JDBC {
             }
         }
     }
-
     public Collection<Flight> getAllFlightsFromAirport(int idAirport) throws SQLException {
         Collection<Flight> flights = new ArrayList<Flight>();
         PreparedStatement stmt = null;
@@ -126,7 +123,6 @@ public class JDBC {
         }
         return flights;
     }
-
     public Airport getAirport(int idAirport) throws SQLException {
         Airport airport = null;
         PreparedStatement stmt = null;
@@ -151,7 +147,6 @@ public class JDBC {
             }
         }
     }
-
     public Flight getFlight(int idFlight) throws SQLException {
         Flight flight = null;
         PreparedStatement stmt = null;
@@ -181,7 +176,6 @@ public class JDBC {
             }
         }
     }
-
     public int getAirportByFlight(int flightId) throws SQLException {
         Flight flight = null;
         PreparedStatement stmt = null;
@@ -215,7 +209,6 @@ public class JDBC {
             }
         }
     }
-
     public void deleteAirport(int idAirport) throws SQLException {
         PreparedStatement flightStmt = null;
         PreparedStatement airportStmt = null;
@@ -234,7 +227,6 @@ public class JDBC {
             }
         }
     }
-
     public void deleteFlightByPeriod(int airportId, LocalDate startPeriod,LocalDate endPeriod) throws SQLException {
         PreparedStatement stmt = null;
         try {
@@ -249,7 +241,6 @@ public class JDBC {
             }
         }
     }
-
     public void  deleteFlightFromAirport(int idAirport) throws SQLException {
             PreparedStatement stmt = null;
             try {
@@ -262,7 +253,6 @@ public class JDBC {
                 }
             }
     }
-
     public void updateAirport(Airport airport) throws SQLException {
         PreparedStatement airportStmt = null;
         try {
@@ -278,7 +268,6 @@ public class JDBC {
             }
         }
     }
-
     public void updateFlight(Flight fl) throws SQLException {
         PreparedStatement stmt = null;
         try {
@@ -300,7 +289,6 @@ public class JDBC {
             }
         }
     }
-
     public void moveFlightsToAirport(int oldId,int newId) throws SQLException {
         PreparedStatement stmt = null;
         try {
@@ -373,6 +361,42 @@ public class JDBC {
         this.deleteAllFlights();
         this.deleteAllAirports();
     }
+    public int getMaxIdInFlights() throws SQLException {
+        ResultSet rs = null;
+        Statement stmt = null;
+        try {
+            stmt = con.createStatement();
+            rs = stmt.executeQuery("SELECT MAX(fId) AS LargestId FROM flight");
+            rs.next();
+            return rs.getInt("LargestId");
+        }
+        finally {
+            if (rs != null) {
+                rs.close();
+            }
+            if (stmt != null) {
+                stmt.close();
+            }
+        }
+    }
+    public int getMaxIdInAirports() throws SQLException {
+        ResultSet rs = null;
+        Statement stmt = null;
+        try {
+            stmt = con.createStatement();
+            rs = stmt.executeQuery("SELECT MAX(aId) AS LargestId FROM airport");
+            rs.next();
+            return rs.getInt("LargestId");
+        }
+        finally {
+            if (rs != null) {
+                rs.close();
+            }
+            if (stmt != null) {
+                stmt.close();
+            }
+        }
+    }
     public int getCountOfFlights() throws SQLException {
         ResultSet rs = null;
         Statement stmt = null;
@@ -428,7 +452,6 @@ public class JDBC {
             }
         }
     }
-
     public List<Airport> getAllAirports() throws SQLException {
         List<Airport> airports = new ArrayList<Airport>();
         Statement stmt = null;
@@ -452,7 +475,6 @@ public class JDBC {
         }
         return airports;
     }
-
     public ArrayList<Flight> getAllFlights() throws SQLException {
         ArrayList<Flight> flights = new ArrayList<Flight>();
         Flight flight = null;

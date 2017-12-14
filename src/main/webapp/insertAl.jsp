@@ -7,26 +7,25 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=EUC-KR">
-    <title>Add new Airport</title>
+    <title>Add New Airport</title>
 </head>
 <body>
 
 <form method="POST" action='AirportHandle' name="frmAddAirport">
 
-    <table>
+    <table border="1" cellpadding="5" cellspacing="1">
         <tr>
             <td>ID</td>
-            <td><input type="text" readonly="readonly" name="airportId" value="<c:out value="${airport.id}" />" />
-            </td>
+            <td><input type="text" readonly="readonly" name="airportId"/></td>
         </tr>
         <tr>
             <td>Name</td>
-            <td><input type="text" name="airportName" value="<c:out value="${airport.name}" />" /></td>
+            <td><input type="text" name="airportName" pattern="([A-Z]([a-zA-Z]*(\s?)))+" title="Example : New York Airport"/></td>
         </tr>
 
         <tr>
-            <td></td>
             <td><input type="submit" value="add" /></td>
+            <td><a href="/AirportHandle?action=airportList">Cancel</a></td>
         </tr>
     </table>
 </form>

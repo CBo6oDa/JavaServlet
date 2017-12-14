@@ -26,10 +26,11 @@
             <td>${airport.name}</td>
             <td><a href="AirportHandle?action=edit&airportId=<c:out value="${airport.id}"/>">Update</a></td>
             <td><a href="AirportHandle?action=delete&airportId=<c:out value="${airport.id}"/>">Delete</a></td>
-            <td><a href="FlightHandle?action=flightList&airportId=<c:out value="${airport.id}"/>">click</a></td>
+            <td><a href="FlightHandle?action=flightList&airportId=<c:out value="${airport.id}"/>">See</a></td>
         </tr>
     </c:forEach>
 </table>
-    <p><a href="AirportHandle?action=insert">Add airport</a></p>
+    <p><a href="AirportHandle?action=insert">Add Airport</a></p>
+    <p><a href="FlightHandle?action=simpleFlightList">Show FlightList</a></p>
 </body>
 </html>
